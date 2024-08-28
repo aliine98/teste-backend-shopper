@@ -1,0 +1,35 @@
+import { Schema, model } from 'mongoose';
+
+interface IMeasure {
+    image_url: string;
+    measure_value: number;
+    measure_datetime: Date;
+    measure_type: string;
+    has_confirmed: boolean;
+}
+
+interface ICustomerMeasures {
+    customer_code: string;
+    measures: IMeasure[];
+}
+
+const MeasureSchema = new Schema<ICustomerMeasures>({
+    customer_code: {
+        type: String,
+        required: true,
+    },
+    measures: {
+        type: [
+            {
+                image_url: String,
+                measure_value: Number,
+                measure_datetime: Date,
+                measure_type: String,
+                has_confirmed: Boolean,
+            },
+        ],
+        required: true,
+    },
+});
+
+export const MeasureModel = model<ICustomerMeasures>('measure', MeasureSchema);
