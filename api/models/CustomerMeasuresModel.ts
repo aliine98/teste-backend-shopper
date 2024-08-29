@@ -1,11 +1,12 @@
 import { Schema, model } from 'mongoose';
 
-interface IMeasure {
+export interface IMeasure {
     image_url: string;
     measure_value: number;
     measure_datetime: Date;
     measure_type: string;
     has_confirmed: boolean;
+    measure_uuid: string;
 }
 
 interface ICustomerMeasures {
@@ -32,4 +33,4 @@ const MeasureSchema = new Schema<ICustomerMeasures>({
     },
 });
 
-export const MeasureModel = model<ICustomerMeasures>('measure', MeasureSchema);
+export const CustomerMeasuresModel = model<ICustomerMeasures>('CustomerMeasure', MeasureSchema);
