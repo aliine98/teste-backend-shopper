@@ -96,6 +96,38 @@ export async function confirmCustomerMeasure(req: Request, res: Response) {
     res.status(200).json({ success: true });
 }
 
+//GET /<customer code>/list
+export async function listCustomerMeasures(req: Request, res: Response) {
+    const customer = await CustomerMeasuresModel.findOne({ customer_code: req.params.customer_code });
+    if (!customer || customer.measures.length === 0) {
+        res.status(404).json({
+            error_code: 'MEASURES_NOT_FOUND',
+            error_description: 'Nenhuma leitura encontrada',
+        });
+        return;
+    }
+
+    const measure_type = req.query.measure_type;
+    if (measure_type && measure_type.toString().toLowerCase() !== 'water' && measure_type.toString().toLowerCase() !== 'gas') {
+        res.status(400).json({
+            error_code: 'INVALID_TYPE',
+            error_description: 'Tipo de medição não permitida',
+        });
+        return;
+    }
+
+    if (measure_type) {
+        const filteredMeasures = customer.measures.filter(m => m.measure_type.toLowerCase() === measure_type.toString().toLowerCase());
+        res.status(200).json({
+            customer_code: req.params.customer_code,
+            measures: filteredMeasures,
+        });
+        return;
+    }
+
+    res.status(200).json(customer);
+}
+
 async function generateContentFromImage(image: string): Promise<GenerateContentResult> {
     return await model.generateContent([
         prompt,
