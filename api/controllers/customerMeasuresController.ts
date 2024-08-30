@@ -60,6 +60,42 @@ export async function createCustomerMeasure(req: Request, res: Response) {
         res.status(500).json({ message: error.message });
     }
 }
+
+//PATCH /confirm
+export async function confirmCustomerMeasure(req: Request, res: Response) {
+    const customer = await CustomerMeasuresModel.findOne({ measures: { $elemMatch: { measure_uuid: req.body.measure_uuid } } }).exec();
+    if (!customer) {
+        res.status(404).json({
+            error_code: 'MEASURE_NOT_FOUND',
+            error_description: 'Leitura não encontrada',
+        });
+        return;
+    }
+
+    if (typeof req.body.measure_uuid !== 'string' || isNaN(req.body.confirmed_value)) {
+        res.status(400).json({
+            error_code: 'INVALID_DATA',
+            error_description: 'Dados inválidos. Por favor informe measure_uuid e confirmed_value válidos.',
+        });
+        return;
+    }
+
+    const measure = customer.measures.find(m => m.measure_uuid === req.body.measure_uuid);
+
+    if (measure!.has_confirmed) {
+        res.status(409).json({
+            error_code: 'CONFIRMATION_DUPLICATE',
+            error_description: 'Leitura do mês já confirmada',
+        });
+        return;
+    }
+
+    measure!.has_confirmed = true;
+    measure!.measure_value = req.body.confirmed_value;
+    await customer.save();
+    res.status(200).json({ success: true });
+}
+
 async function generateContentFromImage(image: string): Promise<GenerateContentResult> {
     return await model.generateContent([
         prompt,
