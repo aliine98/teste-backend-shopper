@@ -1,8 +1,6 @@
 import { Request, Response } from 'express';
 import { CustomerMeasuresModel, IMeasure } from '../models/CustomerMeasuresModel.js';
-import { model, prompt, fileManager } from '../config/google-ai.js';
-import fs from 'fs';
-import { UploadFileResponse } from '@google/generative-ai/server';
+import { model, prompt } from '../config/google-ai.js';
 import { GenerateContentResult } from '@google/generative-ai';
 
 //POST /upload
@@ -16,13 +14,11 @@ export async function createCustomerMeasure(req: Request, res: Response) {
     }
 
     try {
-        const uploadResponse = await decodeAndSaveImage(req);
-
-        const generatedContent = await generateContentFromImage(uploadResponse);
+        const generatedContent = await generateContentFromImage(req.body.image);
 
         const customer = await CustomerMeasuresModel.findOne({ customer_code: req.body.customer_code });
         const newMeasure: IMeasure = {
-            image_url: uploadResponse.file.uri,
+            image_url: `data:image/png;base64,${req.body.image}`,
             measure_value: Number(generatedContent.response.text()) || 0,
             measure_datetime: new Date(req.body.measure_datetime),
             measure_type: req.body.measure_type,
@@ -64,33 +60,16 @@ export async function createCustomerMeasure(req: Request, res: Response) {
         res.status(500).json({ message: error.message });
     }
 }
-async function generateContentFromImage(uploadResponse: UploadFileResponse): Promise<GenerateContentResult> {
+async function generateContentFromImage(image: string): Promise<GenerateContentResult> {
     return await model.generateContent([
         prompt,
         {
-            fileData: {
-                mimeType: uploadResponse.file.mimeType,
-                fileUri: uploadResponse.file.uri,
+            inlineData: {
+                data: image,
+                mimeType: 'image/png',
             },
         },
     ]);
-}
-
-async function decodeAndSaveImage(req: Request): Promise<UploadFileResponse> {
-    const buf = Buffer.from(req.body.image, 'base64');
-    await fs.writeFile('b64DecodedImage.png', buf, function (err) {
-        if (err) {
-            console.log(err);
-        } else {
-            console.log('The file was saved!');
-        }
-    });
-
-    const uploadResponse = await fileManager.uploadFile('b64DecodedImage.png', {
-        mimeType: 'image/png',
-        displayName: 'customer-measure',
-    });
-    return uploadResponse;
 }
 
 function isBase64(str: string): boolean {
