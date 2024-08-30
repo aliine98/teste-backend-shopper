@@ -27,6 +27,7 @@ const MeasureSchema = new Schema<ICustomerMeasures>({
                 measure_datetime: Date,
                 measure_type: String,
                 has_confirmed: Boolean,
+                measure_uuid: String,
             },
         ],
         required: true,
