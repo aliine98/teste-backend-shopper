@@ -167,7 +167,7 @@ URL base: `https://localhost:3333`
 </tbody>
 </table>
 
-`PATCH /mulheres/$id`
+`PATCH /confirm`
 
 <table><thead>
   <tr>
